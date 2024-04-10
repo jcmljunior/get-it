@@ -1,50 +1,73 @@
 extends Node
 
 
-var default := func(cache: Array) -> Dictionary:
-	return {
-		"register": func(name: String, value: Variant) -> Variant:
-			var check := Collection.find.call(cache, "name", name) as Array
-
-			if check.size():
-				printerr("Oppss, %s - cache[%s] ja existe." % [ name, check.pop_front() ])
-				return
+var store := []
 
 
-			cache.append({
-				"name": name,
-				"value": value,
-			})
+func _init(cache: Array = []) -> void:
+	store = cache
 
 
-			return get_instance.call(cache),
+func _get(property: StringName) -> Variant:
+	if not property.begins_with("_"):
+		match property:
+			"store_item":
+				return get_store_item
+
+			"store_list":
+				return get_store_list
 
 
-		"unregister": func(name: String) -> bool:
-			var check := Collection.find.call(cache, "name", name) as Array
-
-			if not check.size():
-				return false
-
-			cache.remove_at(check.pop_front())
-
-			return true,
+	return get(property)
 
 
-		"get_store_list": func() -> Array:
-			return cache,
+func register(name: String, value: Variant) -> Variant:
+	var response := Collection.find.call(store, "name", name) as Array
+
+	if response.size():
+		printerr("Oppss, %s ja foi definido." % [ name ])
+		return
 
 
-		"get_store_item": func(name: String) -> Dictionary:
-			var response := Collection.find.call(cache, "name", name) as Array
-
-			if not response.size():
-				return {}
-
-
-			return cache[response.pop_front()],
-	}
+	store.append({
+		"name": name,
+		"value": value,
+	})
 
 
-var get_instance := func(cache: Array = []) -> Dictionary:
-	return default.call(cache)
+	return self
+
+
+func unregister(name: String) -> void:
+	var response := Collection.find.call(store, "name", name) as Array
+
+	if not response.size():
+		printerr("Oppss, %s nao existe." % [ name ])
+		return
+
+
+	store.remove_at(response.pop_front())
+
+
+func with_dependences(data: Dictionary) -> void:
+	if not store.size():
+		return
+
+
+	for i in data:
+		store.back()[i] = data[i]
+
+
+func get_store_item(name: String) -> Variant:
+	var response := Collection.find.call(store, "name", name) as Array
+
+	if not response.size():
+		printerr("Oppss, %s nao existe." % [ name ])
+		return
+
+
+	return store[response.pop_front()]
+
+
+func get_store_list() -> Array:
+	return store
