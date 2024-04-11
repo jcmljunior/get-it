@@ -1,4 +1,4 @@
-class_name GetIt extends Node
+class_name GetIt extends Object
 
 
 var store := []
