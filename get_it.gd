@@ -21,8 +21,9 @@ func _get(property: StringName) -> Variant:
 	return get(property)
 
 
-func register(name: String, value: Variant) -> Variant:
+func register(name: String, value: Variant, args: Dictionary = {}) -> Variant:
 	var response := Collection.find.call(store, "name", name) as Array
+	var index := store.size()
 
 	if response.size():
 		printerr("Oppss, %s ja foi definido." % [ name ])
@@ -35,7 +36,11 @@ func register(name: String, value: Variant) -> Variant:
 	})
 
 
-	return self
+	if args.size():
+		store[index] = Collection.shallow_merge(store[index], args)
+
+
+	return value
 
 
 func unregister(name: String) -> void:
@@ -47,15 +52,6 @@ func unregister(name: String) -> void:
 
 
 	store.remove_at(response.pop_front())
-
-
-func with_dependences(data: Dictionary) -> void:
-	if not store.size():
-		return
-
-
-	for i in data:
-		store.back()[i] = data[i]
 
 
 func get_store_item(name: String) -> Variant:
